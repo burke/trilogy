@@ -275,11 +275,11 @@ int trilogy_parse_handshake_packet(const uint8_t *buff, size_t len, trilogy_hand
 
         // The auth plugins we support all provide exactly 21 bytes of
         // auth_data. Reject any other values for auth_data_len.
-        if (SCRAMBLE_LEN + 1 != auth_data_len) {
+        if (SCRAMBLE_LEN + 1 != auth_data_len && SCRAMBLE_LEN != auth_data_len) {
             return TRILOGY_PROTOCOL_VIOLATION;
         }
 
-        CHECKED(trilogy_reader_copy_buffer(&reader, remaining_auth_data_len, out_packet->scramble + 8));
+        CHECKED(trilogy_reader_copy_buffer(&reader, remaining_auth_data_len + 1, out_packet->scramble + 8));
     } else {
         // only support 4.1 protocol or newer with secure connection
         return TRILOGY_PROTOCOL_VIOLATION;
@@ -294,7 +294,8 @@ int trilogy_parse_handshake_packet(const uint8_t *buff, size_t len, trilogy_hand
             return TRILOGY_AUTH_PLUGIN_TOO_LONG;
         }
 
-        memcpy(out_packet->auth_plugin, auth_plugin, auth_plugin_len + 1);
+        memcpy(out_packet->auth_plugin, auth_plugin, auth_plugin_len);
+        out_packet->auth_plugin[auth_plugin_len] = 0;
     }
 
     return trilogy_reader_finish(&reader);
